@@ -10,7 +10,7 @@ class MyApp extends StatefulWidget {
   _MyAppState createState() => _MyAppState();
 }
 
-class _MyAppState extends State<MyApp> {
+class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
   StreamSubscription _shotcutSubscription;
   String _content = '';
   List<SiriShotcut> shotcuts = [
@@ -28,24 +28,38 @@ class _MyAppState extends State<MyApp> {
     ),
   ];
 
+  /// 是否进入前台
+  bool _isForeground = true;
+
   @override
   void initState() {
     super.initState();
-    _shotcutSubscription = FlutterSiriShortcuts.listenShotcut().listen((data) {
-      if (data == 'siri.shotcut.bike_location') {
-        _content = '您的爱车在深圳市';
-      }
+    WidgetsBinding.instance.addObserver(this);
+    _shotcutSubscription = FlutterSiriShortcuts.listenShotcut().listen((value) {
+      _changeContent(value);
+    });
 
-      if (data == 'siri.shotcut.bike_soc') {
-        _content = '您的爱车电量还是80%';
+    FlutterSiriShortcuts.getLaunchShotcut().then((value) {
+      if (_isForeground) {
+        _changeContent(value);
       }
-
-      setState(() {});
     });
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    if (state == AppLifecycleState.resumed) {
+      _isForeground = true;
+    }
+    if (state == AppLifecycleState.paused) {
+      _isForeground = false;
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _shotcutSubscription?.cancel();
     super.dispose();
   }
@@ -116,6 +130,18 @@ class _MyAppState extends State<MyApp> {
         ],
       ),
     );
+  }
+
+  void _changeContent(String data) {
+    if (data == 'siri.shotcut.bike_location') {
+      _content = '您的爱车在深圳市';
+    }
+
+    if (data == 'siri.shotcut.bike_soc') {
+      _content = '您的爱车电量还是80%';
+    }
+
+    setState(() {});
   }
 }
 

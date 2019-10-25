@@ -8,6 +8,7 @@ class FlutterSiriShortcuts {
   static const EventChannel _setShotcutChannel = const EventChannel('github.com/hugochou/setShotcut');
   static const EventChannel _getShotcutsChannel = const EventChannel('github.com/hugochou/getAllVoiceShortcuts');
   static const EventChannel _listenShotcutChannel = const EventChannel('github.com/hugochou/listenShotcut');
+  static const MethodChannel _methodChannel = const MethodChannel('github.com/hugochou/methodChannel');
 
   /// 设置 Siri 捷径
   /// [type] 区分不同捷径的标识
@@ -75,5 +76,15 @@ class FlutterSiriShortcuts {
       });
     }
     return null;
+  }
+
+  /// 获取当前siri捷径命令
+  /// 当通过siri启动时，listenShotcut 在启动后才调用， 所以监听不到相关的siri捷径命令，此时就需要用此方法
+  static Future<String> getLaunchShotcut() {
+    if (Platform.isIOS) {
+      return _methodChannel.invokeMethod('getLaunchShotcut');
+    } else {
+      return null;
+    }
   }
 }

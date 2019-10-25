@@ -6,6 +6,7 @@
 static NSString * const CHANNEL_NAME_SET_SHOTCUT = @"github.com/hugochou/setShotcut";
 static NSString * const CHANNEL_NAME_GET_SHOTCUTS = @"github.com/hugochou/getAllVoiceShortcuts";
 static NSString * const CHANNEL_NAME_LISTEN_SHOTCUTS = @"github.com/hugochou/listenShotcut";
+static NSString * const CHANNEL_NAME_METHOD = @"github.com/hugochou/methodChannel";
 
 
 @interface FlutterSiriShortcutsPlugin()<INUIAddVoiceShortcutViewControllerDelegate, INUIEditVoiceShortcutViewControllerDelegate, FlutterStreamHandler>
@@ -15,29 +16,43 @@ static NSString * const CHANNEL_NAME_LISTEN_SHOTCUTS = @"github.com/hugochou/lis
 @property (nonatomic, strong) FlutterEventChannel *setShotcutChannel;
 @property (nonatomic, strong) FlutterEventChannel *allShotcutsChannel;
 @property (nonatomic, strong) FlutterEventChannel *listenShotcutChannel;
+@property (nonatomic, copy) NSString *activityType;
 @end
 
 @implementation FlutterSiriShortcutsPlugin
 + (void)registerWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {
     FlutterSiriShortcutsPlugin* instance = [[FlutterSiriShortcutsPlugin alloc] init];
-    
+
     // 注册设置捷径channel
     instance.setShotcutChannel = [FlutterEventChannel eventChannelWithName:CHANNEL_NAME_SET_SHOTCUT
                                                            binaryMessenger:[registrar messenger]];
     [instance.setShotcutChannel setStreamHandler:instance];
-    
+
     // 注册获取所有捷径channel
     instance.allShotcutsChannel = [FlutterEventChannel eventChannelWithName:CHANNEL_NAME_GET_SHOTCUTS
                                                             binaryMessenger:[registrar messenger]];
     [instance.allShotcutsChannel setStreamHandler:instance];
-    
+
     // 注册监听 Siri 捷径命令channel
     instance.allShotcutsChannel = [FlutterEventChannel eventChannelWithName:CHANNEL_NAME_LISTEN_SHOTCUTS
                                                             binaryMessenger:[registrar messenger]];
     [instance.allShotcutsChannel setStreamHandler:instance];
-    
-    
+
+
+    FlutterMethodChannel* channel = [FlutterMethodChannel
+                                     methodChannelWithName:CHANNEL_NAME_METHOD
+                                     binaryMessenger:[registrar messenger]];
+    [registrar addMethodCallDelegate:instance channel:channel];
+
     [registrar addApplicationDelegate:instance];
+}
+
+- (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
+    if ([@"getLaunchShotcut" isEqualToString:call.method]) {
+        result(self.activityType);
+    } else {
+        result(FlutterMethodNotImplemented);
+    }
 }
 
 - (void)getAllVoiceShortcuts {
@@ -84,12 +99,12 @@ static NSString * const CHANNEL_NAME_LISTEN_SHOTCUTS = @"github.com/hugochou/lis
     [userActivity setEligibleForPrediction:YES];
     userActivity.suggestedInvocationPhrase = suggestion;
     userActivity.persistentIdentifier = type;
-    
+
     CSSearchableItemAttributeSet *attributes = [[CSSearchableItemAttributeSet alloc] init];
     attributes.contentDescription = subTitle;
-    
+
     userActivity.contentAttributeSet = attributes;
-    
+
     dispatch_async(dispatch_get_main_queue(), ^{
         FlutterAppDelegate *delegate = (FlutterAppDelegate *)[UIApplication sharedApplication].delegate;
         UIViewController *root = delegate.window.rootViewController;
@@ -182,6 +197,7 @@ static NSString * const CHANNEL_NAME_LISTEN_SHOTCUTS = @"github.com/hugochou/lis
 
 #pragma mark - UIApplicationDelegate
 - (BOOL)application:(UIApplication *)application continueUserActivity:(nonnull NSUserActivity *)userActivity restorationHandler:(nonnull void (^)(NSArray * _Nullable))restorationHandler {
+    self.activityType = userActivity.activityType;
     if (self.listenShotcutSink) {
         self.listenShotcutSink(userActivity.activityType);
     }
