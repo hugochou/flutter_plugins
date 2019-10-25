@@ -50,6 +50,9 @@ static NSString * const CHANNEL_NAME_METHOD = @"github.com/hugochou/methodChanne
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
     if ([@"getLaunchShotcut" isEqualToString:call.method]) {
         result(self.activityType);
+    } else if ([@"cleanLaunchShotcut" isEqualToString:call.method]) {
+        self.activityType = nil;
+        result(nil);
     } else {
         result(FlutterMethodNotImplemented);
     }

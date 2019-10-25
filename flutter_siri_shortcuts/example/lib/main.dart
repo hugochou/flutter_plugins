@@ -40,6 +40,7 @@ class _MyAppState extends State<MyApp> with WidgetsBindingObserver {
     });
 
     FlutterSiriShortcuts.getLaunchShotcut().then((value) {
+      FlutterSiriShortcuts.cleanLaunchShotcut();
       if (_isForeground) {
         _changeContent(value);
       }

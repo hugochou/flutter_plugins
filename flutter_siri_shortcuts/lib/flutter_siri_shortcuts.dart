@@ -27,7 +27,7 @@ class FlutterSiriShortcuts {
         'suggestion': suggestion,
       };
       _setShotcutChannel.receiveBroadcastStream(params).listen(
-        (event) {
+            (event) {
           if (event is num) {
             completer.complete(event.toInt());
           } else {
@@ -49,7 +49,7 @@ class FlutterSiriShortcuts {
     if (Platform.isIOS) {
       Completer<List<String>> completer = Completer<List<String>>();
       _getShotcutsChannel.receiveBroadcastStream({'channelName': 'getAllVoiceShortcuts'}).listen(
-        (event) {
+            (event) {
           if (event is List) {
             result = event.map((e) => e.toString()).toList();
             completer.complete(result);
@@ -83,6 +83,15 @@ class FlutterSiriShortcuts {
   static Future<String> getLaunchShotcut() {
     if (Platform.isIOS) {
       return _methodChannel.invokeMethod('getLaunchShotcut');
+    } else {
+      return null;
+    }
+  }
+
+  /// 清除缓存的siri捷径命令
+  static Future<String> cleanLaunchShotcut() {
+    if (Platform.isIOS) {
+      return _methodChannel.invokeMethod('cleanLaunchShotcut');
     } else {
       return null;
     }
